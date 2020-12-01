@@ -1,7 +1,7 @@
 <template>
     <el-container style="border: 1px solid #eee">
         <el-header style="font-size: 18px;line-height: 60px">
-            <div style="float: left">Userinfo</div>
+            <div style="float: left">用户信息</div>
             <div style="float: right;padding-top: 20px">
                 <el-breadcrumb separator-class="el-icon-arrow-right">
                     <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>

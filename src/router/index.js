@@ -3,20 +3,25 @@ import VueRouter from 'vue-router'
 
 Vue.use(VueRouter)
 
+import main from 'components/main/main.vue'
+const proManager = () => import('components/proManager/proManager.vue')
+const stageManager = () => import('components/stageManager/stageManager.vue')
+const taskManager = () => import('components/taskManager/taskManager.vue')
+const mamberManager = () => import('components/mamberManager/mamberManager.vue')
+const userManager = () => import('components/sysManger/userManager/userManager.vue')
+const roleManager = () => import('components/sysManger/roleManager/roleManager.vue')
+const userinfo = () =>import('components/user/userinfo/userinfo.vue')
 const routes = [
-  // {
-  //   path: '/',
-  //   name: 'Home',
-  //   component: Home
-  // },
-  // {
-  //   path: '/about',
-  //   name: 'About',
-  //   // route level code-splitting
-  //   // this generates a separate chunk (about.[hash].js) for this route
-  //   // which is lazy-loaded when the route is visited.
-  //   component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
-  // }
+  { path:'', redirect:'/main'},
+  { path: '/main', component: main },
+  { path: '/proManager', component: proManager },
+  { path: '/stageManager', component: stageManager },
+  { path: '/taskManager', component: taskManager },
+  { path: '/mamberManager', component: mamberManager },
+  { path: '/userManager', component: userManager },
+  { path: '/roleManager', component: roleManager },
+  { path: '/roleManager', component: roleManager },
+  { path: '/userinfo', component: userinfo },
 ]
 
 const router = new VueRouter({

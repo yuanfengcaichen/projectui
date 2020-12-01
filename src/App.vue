@@ -30,7 +30,9 @@
       </el-header>
       <el-container>
         <Aside/>
-        <Main/>
+        <transition name="slide">
+          <router-view></router-view>
+        </transition>
       </el-container>
     </el-container>
   </div>
@@ -38,12 +40,11 @@
 
 <script>
 import Aside from "components/aside/aside.vue"
-import Main from "components/main/main.vue"
+//import Main from "components/main/main.vue"
 export default {
   name: 'App',
   components: {
     Aside,
-    Main,
   }
 }
 </script>
