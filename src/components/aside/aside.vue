@@ -24,7 +24,7 @@
 
 <script>
     export default {
-        name: "aside",
+        name: "myaside",
         methods:{
             asideclick(route){
                 this.$router.push(route)

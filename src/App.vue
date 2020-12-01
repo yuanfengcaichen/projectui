@@ -29,22 +29,104 @@
         </el-dropdown>
       </el-header>
       <el-container>
-        <Aside/>
+        <myaside/>
         <transition name="slide">
           <router-view></router-view>
         </transition>
       </el-container>
     </el-container>
+    <el-dialog
+            title="登录"
+            :visible.sync="dialogVisible"
+            width="30%"
+            :before-close="handleClose">
+      <el-form ref="form" status-icon  label-width="80px">
+        <el-form-item label="用户名">
+          <el-input v-model="une"></el-input>
+        </el-form-item>
+        <el-form-item label="用户密码">
+          <el-input type="password" autocomplete="off" v-model="pwd"></el-input>
+        </el-form-item>
+      </el-form>
+      <el-alert style="margin-top: 5px" v-if="error" title="用户名或密码错误" type="error"></el-alert>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="handleClose">取 消</el-button>
+        <el-button type="primary" @click="login">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import Aside from "components/aside/aside.vue"
-//import Main from "components/main/main.vue"
+import myaside from "components/aside/aside.vue"
+import {request4} from 'network/request.js'
+import {Loading} from "element-ui";
 export default {
   name: 'App',
   components: {
-    Aside,
+    myaside,
+  },
+  data(){
+    return {
+      une:'',
+      pwd:'',
+      dialogVisible: false,
+      error:false,
+    }
+  },
+  methods: {
+    handleClose(done) {
+      this.$confirm('取消登录？')
+              .then(()=> {
+                this.dialogVisible = false
+                done();
+              })
+              .catch(()=> {});
+    },
+    login(){
+      request4({
+        method: 'post',
+        url: '/login',
+        data: {
+          username: this.une,
+          password: this.pwd,
+        }
+      }).then(res=>{
+        console.log(res)
+        let user={}
+        user.login = true
+        this.$store.commit('login',user)
+        this.dialogVisible = false
+        let loadingInstance  = Loading.service({
+          lock: true,
+          text: 'Loading',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
+        loadingInstance.close();
+      }).catch(err=>{
+        console.log(err)
+        this.error = true
+
+        let user={}
+        user.login = true
+        this.$store.commit('login',user)
+        this.dialogVisible = false
+        let loadingInstance  = Loading.service({
+          lock: true,
+          text: 'Loading',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
+        loadingInstance.close();
+      });
+    }
+  },
+  created() {
+    this.$store.dispatch('showloding')
+    if(!this.$store.state.user.login){
+      this.dialogVisible = true
+    }
   }
 }
 </script>

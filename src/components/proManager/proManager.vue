@@ -1,7 +1,10 @@
 <template>
     <el-container style="border: 1px solid #eee">
         <el-header style="font-size: 18px;line-height: 60px">
-            <div style="float: left">项目列表</div>
+            <div style="float: left;padding-top: 15px">
+                <el-page-header @back="goBack" content="项目列表">
+                </el-page-header>
+            </div>
             <div style="float: right;padding-top: 20px">
                 <el-breadcrumb separator-class="el-icon-arrow-right">
                     <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>

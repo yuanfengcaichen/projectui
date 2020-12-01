@@ -8,6 +8,8 @@ import store from 'store/index'
 Vue.use(ElementUI);
 Vue.config.productionTip = false
 
+Vue.prototype.goBack = () => router.back(-1)
+
 new Vue({
   router,
   store,
