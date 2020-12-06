@@ -92,6 +92,33 @@ export default {
           password: this.pwd,
         }
       }).then(res=>{
+        //console.log(res)
+        this.getuserinfo(res.data.token)
+        setTimeout(() => {
+          this.getuserinfo(res.data.token)
+        }, 90000);
+        let user={}
+        user.login = true
+        this.$store.commit('login',user)
+        this.dialogVisible = false
+        let loadingInstance  = Loading.service({
+          lock: true,
+          text: 'Loading',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
+        loadingInstance.close();
+      }).catch(err=>{
+        console.log(err)
+        this.error = true
+      });
+    },
+    getuserinfo(token){
+      request4({
+        method: 'get',
+        url: '/userinfo',
+        headers: {"Authorization":token}
+      }).then(res=>{
         console.log(res)
         let user={}
         user.login = true
@@ -107,18 +134,6 @@ export default {
       }).catch(err=>{
         console.log(err)
         this.error = true
-
-        let user={}
-        user.login = true
-        this.$store.commit('login',user)
-        this.dialogVisible = false
-        let loadingInstance  = Loading.service({
-          lock: true,
-          text: 'Loading',
-          spinner: 'el-icon-loading',
-          background: 'rgba(0, 0, 0, 0.7)'
-        });
-        loadingInstance.close();
       });
     }
   },

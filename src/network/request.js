@@ -57,7 +57,7 @@ export function request3(config){
 export function request4(config){
     //1.创建axios实例
     const instance = axios.create({
-        baseURL:'http://127.0.0.1:8000',
+        baseURL:'http://127.0.0.1:9001',
         timeout:5000
     })
 
