@@ -97,17 +97,6 @@ export default {
         setTimeout(() => {
           this.getuserinfo(res.data.token)
         }, 90000);
-        let user={}
-        user.login = true
-        this.$store.commit('login',user)
-        this.dialogVisible = false
-        let loadingInstance  = Loading.service({
-          lock: true,
-          text: 'Loading',
-          spinner: 'el-icon-loading',
-          background: 'rgba(0, 0, 0, 0.7)'
-        });
-        loadingInstance.close();
       }).catch(err=>{
         console.log(err)
         this.error = true
@@ -119,18 +108,26 @@ export default {
         url: '/userinfo',
         headers: {"Authorization":token}
       }).then(res=>{
-        console.log(res)
-        let user={}
-        user.login = true
-        this.$store.commit('login',user)
-        this.dialogVisible = false
-        let loadingInstance  = Loading.service({
-          lock: true,
-          text: 'Loading',
-          spinner: 'el-icon-loading',
-          background: 'rgba(0, 0, 0, 0.7)'
-        });
-        loadingInstance.close();
+        if(res.data.userinfo.uid!=0 && res.data.token!=undefined){
+          let user={}
+          user = res.data.userinfo
+          user.login = true
+          user.token = res.data.token
+          user.expire = res.data.expire
+          //console.log(user)
+          this.$store.commit('login',user)
+          this.dialogVisible = false
+          let loadingInstance  = Loading.service({
+            lock: true,
+            text: 'Loading',
+            spinner: 'el-icon-loading',
+            background: 'rgba(0, 0, 0, 0.7)'
+          });
+          loadingInstance.close();
+        }
+        else{
+          this.error = true
+        }
       }).catch(err=>{
         console.log(err)
         this.error = true
