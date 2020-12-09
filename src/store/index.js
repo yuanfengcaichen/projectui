@@ -12,9 +12,9 @@ export default new Vuex.Store({
     }
   },
   mutations: {
-    login(user){
-      this.state.user = user
-    }
+    login(state,user){
+      state.user = user
+    },
   },
   actions: {
     checklogin(){

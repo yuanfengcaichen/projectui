@@ -94,9 +94,6 @@ export default {
       }).then(res=>{
         //console.log(res)
         this.getuserinfo(res.data.token)
-        setTimeout(() => {
-          this.getuserinfo(res.data.token)
-        }, 90000);
       }).catch(err=>{
         console.log(err)
         this.error = true
