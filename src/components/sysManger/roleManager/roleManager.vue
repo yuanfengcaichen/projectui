@@ -79,13 +79,14 @@
                 </el-pagination>
             </div>
         </el-main>
-      <el-drawer
-              title="我是标题"
-              :visible.sync="drawer"
-              :with-header="false">
-          <el-checkbox-group v-model="rpermisses">
-              <el-checkbox v-for="permiss in Allpermisses" :label="permiss.permission_info" :key="permiss.perid">{{permiss.permission_info}}</el-checkbox>
+      <el-drawer title="权限设置" :visible.sync="drawer" :with-header="false" :before-close="handleClose" ref="drawer">
+          <el-checkbox-group v-model="rpermisses" class="checkboxgroup">
+              <el-checkbox class="checkbox" v-for="permiss in Allpermisses" :label="permiss.permission_info" :key="permiss.perid">{{permiss.permission_info}}</el-checkbox>
           </el-checkbox-group>
+          <div class="demo-drawer__footer">
+              <el-button @click="cancelForm">取 消</el-button>
+              <el-button type="primary" @click="$refs.drawer.closeDrawer()" :loading="loading">{{ loading ? '提交中 ...' : '确 定' }}</el-button>
+          </div>
       </el-drawer>
     </el-container>
 </template>
@@ -102,6 +103,9 @@
                 pageSize: 5,
                 total: 1,
                 drawer: false,
+                loading: false,
+                timer: null,
+                rid:0,
                 Allpermisses: [],
                 rpermisses: [],
             }
@@ -112,7 +116,7 @@
             }
         },
         methods: {
-            getplist(){
+            getplist(){//获取全部角色
                 let that = this;
                 request4({
                     method: 'get',
@@ -123,7 +127,7 @@
                     },
                     headers: {"Authorization":this.token}
                 }).then(res=>{
-                    console.log(res)
+                    //console.log(res)
                     that.roleList = res.data.list
                     that.total = res.data.total
                 }).catch(err=>{
@@ -131,7 +135,7 @@
                     this.error = true
                 });
             },
-            getAllpermiss(){
+            getAllpermiss(){//获取全部权限
                 let that = this;
                 request4({
                     method: 'get',
@@ -140,7 +144,7 @@
                     },
                     headers: {"Authorization":this.token}
                 }).then(res=>{
-                    console.log(res)
+                    //console.log(res)
                     that.Allpermisses = res.data.list
                 }).catch(err=>{
                     console.log(err)
@@ -176,7 +180,9 @@
                 this.getplist()
                 this.getAllpermiss()
             },
-            getroleperes(rid){
+            getroleperes(rid){//获取当前选则角色的权限列表
+                this.rid = rid
+                this.rpermisses = []
                 let that = this;
                 request4({
                     method: 'get',
@@ -186,17 +192,60 @@
                     },
                     headers: {"Authorization":this.token}
                 }).then(res=>{
-                    console.log(res)
-                    for(let rpermiss in res.data.list){
-                        that.rpermisses.push(rpermiss.permission_info)
+                    //console.log(res)
+                    for(let i=0;i<res.data.list.length; i++){
+                        that.rpermisses.push(res.data.list[i].permission_info)
                     }
                     that.drawer = true
                 }).catch(err=>{
                     console.log(err)
                     this.error = true
                 });
-                console.log(this.rpermisses)
             },
+            handleClose() {
+                let that = this;
+                if (this.loading) {
+                    return;
+                }
+                this.$confirm('确定要提交表单吗？')
+                    .then(() => {
+                        this.loading = true;
+                        this.timer = setTimeout(() => {
+                            request4({
+                                method: 'post',
+                                url: '/permisses',
+                                data: {
+                                    rid: this.rid,
+                                    rpermisses:this.rpermisses
+                                },
+                                headers: {"Authorization":this.token}
+                            }).then(res=>{
+                                if(res.data.result==200){
+                                    that.$message({
+                                        message: '权限修改成功',
+                                        type: 'success'
+                                    });
+                                }
+                            }).catch(err=>{
+                                console.log(err)
+                                that.$message({
+                                    message: '修改失败',
+                                    type: 'error'
+                                });
+                            });
+                            this.drawer = false;
+                            // 动画关闭需要一定的时间
+                            setTimeout(() => {
+                                this.loading = false;
+                            }, 400);
+                        }, 1000);
+                    })
+            },
+            cancelForm() {
+                this.loading = false;
+                this.drawer = false;
+                clearTimeout(this.timer);
+            }
         },
         created() {
             this.getplist()
@@ -209,5 +258,18 @@
 </script>
 
 <style scoped>
-
+    .checkboxgroup{
+        padding-top: 20px;
+        padding-left: 30px;
+    }
+    .checkbox{
+        display: block;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .demo-drawer__footer{
+        transform: translate(80%, -50%);
+        position: fixed;
+        bottom: 25px;
+    }
 </style>
