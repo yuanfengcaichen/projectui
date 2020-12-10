@@ -16,10 +16,10 @@
 
         <el-main>
             <el-button-group style="margin-bottom: 10px">
-                <el-button type="primary" icon="el-icon-document">新建</el-button>
-                <el-button type="primary" icon="el-icon-edit">修改</el-button>
-                <el-button type="primary" icon="el-icon-delete">删除</el-button>
-                <el-button type="primary" icon="el-icon-refresh">刷新</el-button>
+                <el-button type="primary" icon="el-icon-document" @click="newmodal()">新建</el-button>
+                <el-button type="primary" icon="el-icon-edit" @click="update()">修改</el-button>
+                <el-button type="primary" icon="el-icon-delete" @click="deleteitem()">删除</el-button>
+                <el-button type="primary" icon="el-icon-refresh" @click="refresh()">刷新</el-button>
             </el-button-group>
             <el-table
                     :data="proList"
@@ -98,7 +98,6 @@
 
 <script>
     import {request4} from 'network/request.js'
-
     export default {
         name: "proManager",
         data() {
@@ -127,7 +126,7 @@
                      },
                     headers: {"Authorization":this.token}
                  }).then(res=>{
-                    //console.log(res)
+                    console.log(res)
                     that.proList = res.data.list
                     that.total = res.data.total
                 }).catch(err=>{
@@ -150,7 +149,19 @@
                 //console.log(`当前页: ${val}`);
                 this.pageNum = val
                 this.getplist()
-            }
+            },
+            newmodal(){
+
+            },
+            update(){
+
+            },
+            deleteitem(){
+                console.log(this.multipleSelection)
+            },
+            refresh(){
+                this.getplist()
+            },
         },
         created() {
             this.getplist()

@@ -16,13 +16,13 @@
 
         <el-main>
             <el-button-group style="margin-bottom: 10px">
-                <el-button type="primary" icon="el-icon-document">新建</el-button>
-                <el-button type="primary" icon="el-icon-edit">修改</el-button>
-                <el-button type="primary" icon="el-icon-delete">删除</el-button>
-                <el-button type="primary" icon="el-icon-refresh">刷新</el-button>
+                <el-button type="primary" icon="el-icon-document" @click="newmodal()">新建</el-button>
+                <el-button type="primary" icon="el-icon-edit" @click="update()">修改</el-button>
+                <el-button type="primary" icon="el-icon-delete" @click="deleteitem()">删除</el-button>
+                <el-button type="primary" icon="el-icon-refresh" @click="refresh()">刷新</el-button>
             </el-button-group>
             <el-table
-                    :data="tableData"
+                    :data="roleList"
                     border
                     style="width: 100%"
                     @selection-change="handleSelectionChange">
@@ -32,42 +32,38 @@
                 </el-table-column>
                 <el-table-column
                         fixed
-                        prop="date"
-                        label="日期"
+                        prop="rid"
+                        label="角色编号"
                         width="150">
                 </el-table-column>
                 <el-table-column
-                        prop="name"
-                        label="姓名"
+                        prop="role_name"
+                        label="角色名称"
+                        width="150">
+                </el-table-column>
+                <el-table-column
+                        prop="role_info"
+                        label="角色信息"
+                        width="200">
+                </el-table-column>
+                <el-table-column
+                        prop="is_lock"
+                        label="是否锁定"
                         width="120">
                 </el-table-column>
                 <el-table-column
-                        prop="province"
-                        label="省份"
-                        width="120">
-                </el-table-column>
-                <el-table-column
-                        prop="city"
-                        label="市区"
-                        width="120">
-                </el-table-column>
-                <el-table-column
-                        prop="address"
-                        label="地址"
-                        width="300">
-                </el-table-column>
-                <el-table-column
-                        prop="zip"
-                        label="邮编"
-                        width="120">
+                        prop="create_time"
+                        label="创建时间"
+                        width="200">
                 </el-table-column>
                 <el-table-column
                         fixed="right"
                         label="操作"
-                        width="100">
+                        width="200">
                     <template slot-scope="scope">
                         <el-button @click="handleClick(scope.row)" type="text" size="small">查看</el-button>
                         <el-button type="text" size="small">编辑</el-button>
+                        <el-button type="text" size="small" @click="getroleperes(scope.row.rid)">修改权限</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -75,21 +71,82 @@
                 <el-pagination
                         @size-change="handleSizeChange"
                         @current-change="handleCurrentChange"
-                        :current-page="currentPage4"
-                        :page-sizes="[100, 200, 300, 400]"
-                        :page-size="100"
+                        :current-page="pageNum"
+                        :page-sizes="[5, 10, 20, 30, 40]"
+                        :page-size="pageSize"
                         layout="total, sizes, prev, pager, next, jumper"
-                        :total="400">
+                        :total="total">
                 </el-pagination>
             </div>
         </el-main>
+      <el-drawer
+              title="我是标题"
+              :visible.sync="drawer"
+              :with-header="false">
+          <el-checkbox-group v-model="rpermisses">
+              <el-checkbox v-for="permiss in Allpermisses" :label="permiss.permission_info" :key="permiss.perid">{{permiss.permission_info}}</el-checkbox>
+          </el-checkbox-group>
+      </el-drawer>
     </el-container>
 </template>
 
 <script>
+    import {request4} from 'network/request.js'
     export default {
         name: "roleManager",
+        data() {
+            return {
+                roleList: [],
+                multipleSelection: [],
+                pageNum: 1,
+                pageSize: 5,
+                total: 1,
+                drawer: false,
+                Allpermisses: [],
+                rpermisses: [],
+            }
+        },
+        computed: {
+            token(){
+                return this.$store.state.user.token
+            }
+        },
         methods: {
+            getplist(){
+                let that = this;
+                request4({
+                    method: 'get',
+                    url: '/roles',
+                    params: {
+                        pageNum: this.pageNum,
+                        pageSize: this.pageSize,
+                    },
+                    headers: {"Authorization":this.token}
+                }).then(res=>{
+                    console.log(res)
+                    that.roleList = res.data.list
+                    that.total = res.data.total
+                }).catch(err=>{
+                    console.log(err)
+                    this.error = true
+                });
+            },
+            getAllpermiss(){
+                let that = this;
+                request4({
+                    method: 'get',
+                    url: '/permisses',
+                    params: {
+                    },
+                    headers: {"Authorization":this.token}
+                }).then(res=>{
+                    console.log(res)
+                    that.Allpermisses = res.data.list
+                }).catch(err=>{
+                    console.log(err)
+                    this.error = true
+                });
+            },
             handleSelectionChange(val) {
                 this.multipleSelection = val;
             },
@@ -97,50 +154,56 @@
                 console.log(row);
             },
             handleSizeChange(val) {
-                console.log(`每页 ${val} 条`);
+                //console.log(`每页 ${val} 条`);
+                this.pageSize = val
+                this.getplist()
             },
             handleCurrentChange(val) {
-                console.log(`当前页: ${val}`);
-            }
-        },
+                //console.log(`当前页: ${val}`);
+                this.pageNum = val
+                this.getplist()
+            },
+            newmodal(){
 
-        data() {
-            return {
-                tableData: [{
-                    date: '2016-05-02',
-                    name: '王小虎',
-                    province: '上海',
-                    city: '普陀区',
-                    address: '上海市普陀区金沙江路 1518 弄',
-                    zip: 200333
-                }, {
-                    date: '2016-05-04',
-                    name: '王小虎',
-                    province: '上海',
-                    city: '普陀区',
-                    address: '上海市普陀区金沙江路 1517 弄',
-                    zip: 200333
-                }, {
-                    date: '2016-05-01',
-                    name: '王小虎',
-                    province: '上海',
-                    city: '普陀区',
-                    address: '上海市普陀区金沙江路 1519 弄',
-                    zip: 200333
-                }, {
-                    date: '2016-05-03',
-                    name: '王小虎',
-                    province: '上海',
-                    city: '普陀区',
-                    address: '上海市普陀区金沙江路 1516 弄',
-                    zip: 200333
-                }],
-                multipleSelection: [],
-                currentPage1: 5,
-                currentPage2: 5,
-                currentPage3: 5,
-                currentPage4: 4,
-            }
+            },
+            update(){
+
+            },
+            deleteitem(){
+                console.log(this.multipleSelection)
+            },
+            refresh(){
+                this.getplist()
+                this.getAllpermiss()
+            },
+            getroleperes(rid){
+                let that = this;
+                request4({
+                    method: 'get',
+                    url: '/role_permisses',
+                    params: {
+                        rid: rid,
+                    },
+                    headers: {"Authorization":this.token}
+                }).then(res=>{
+                    console.log(res)
+                    for(let rpermiss in res.data.list){
+                        that.rpermisses.push(rpermiss.permission_info)
+                    }
+                    that.drawer = true
+                }).catch(err=>{
+                    console.log(err)
+                    this.error = true
+                });
+                console.log(this.rpermisses)
+            },
+        },
+        created() {
+            this.getplist()
+            this.getAllpermiss()
+        },
+        mounted() {
+
         }
     }
 </script>
