@@ -147,6 +147,7 @@
             },
             refresh(){
                 this.getplist()
+                this.$message({ message: '刷新成功', type: 'success' });
             }
         },
         created() {

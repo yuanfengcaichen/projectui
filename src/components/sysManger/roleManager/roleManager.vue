@@ -17,7 +17,6 @@
         <el-main>
             <el-button-group style="margin-bottom: 10px">
                 <el-button type="primary" icon="el-icon-document" @click="newmodal()">新建</el-button>
-                <el-button type="primary" icon="el-icon-edit" @click="update()">修改</el-button>
                 <el-button type="primary" icon="el-icon-delete" @click="deleteitem()">删除</el-button>
                 <el-button type="primary" icon="el-icon-refresh" @click="refresh()">刷新</el-button>
             </el-button-group>
@@ -48,8 +47,11 @@
                 </el-table-column>
                 <el-table-column
                         prop="is_lock"
-                        label="是否锁定"
+                        label="是否启用"
                         width="120">
+                    <template slot-scope="scope">
+                        {{scope.row.is_lock==0?'是':'否'}}
+                    </template>
                 </el-table-column>
                 <el-table-column
                         prop="create_time"
@@ -61,8 +63,8 @@
                         label="操作"
                         width="200">
                     <template slot-scope="scope">
-                        <el-button @click="handleClick(scope.row)" type="text" size="small">查看</el-button>
-                        <el-button type="text" size="small">编辑</el-button>
+                        <el-button type="text" size="small" @click="handleClick(scope.row)">查看</el-button>
+                        <el-button type="text" size="small" @click="update(scope.row)">编辑</el-button>
                         <el-button type="text" size="small" @click="getroleperes(scope.row.rid)">修改权限</el-button>
                     </template>
                 </el-table-column>
@@ -79,15 +81,35 @@
                 </el-pagination>
             </div>
         </el-main>
-      <el-drawer title="权限设置" :visible.sync="drawer" :with-header="false" :before-close="handleClose" ref="drawer">
-          <el-checkbox-group v-model="rpermisses" class="checkboxgroup">
-              <el-checkbox class="checkbox" v-for="permiss in Allpermisses" :label="permiss.permission_info" :key="permiss.perid">{{permiss.permission_info}}</el-checkbox>
-          </el-checkbox-group>
-          <div class="demo-drawer__footer">
-              <el-button @click="cancelForm">取 消</el-button>
-              <el-button type="primary" @click="$refs.drawer.closeDrawer()" :loading="loading">{{ loading ? '提交中 ...' : '确 定' }}</el-button>
-          </div>
-      </el-drawer>
+        <el-drawer title="角色信息" :visible.sync="editdrawer" :with-header="false" :before-close="edithandleClose" ref="editdrawer">
+          <el-form style="margin-top: 30px">
+              <el-form-item label="角色id" :label-width="'100px'" v-if="false">
+                  <el-input v-model="rid" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="角色名称" :label-width="'90px'">
+                  <el-input v-model="role_name" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="角色描述" :label-width="'90px'">
+                  <el-input v-model="role_info" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="启用" :label-width="'90px'">
+                  <el-switch v-model="is_lock"> </el-switch>
+              </el-form-item>
+          </el-form>
+            <div class="demo-drawer__footer">
+                <el-button @click="canceleditForm">取 消</el-button>
+                <el-button type="primary" @click="$refs.editdrawer.closeDrawer()" :loading="loading">{{ loading ? '提交中 ...' : '确 定' }}</el-button>
+            </div>
+        </el-drawer>
+        <el-drawer title="权限设置" :visible.sync="drawer" :with-header="false" :before-close="handleClose" ref="drawer">
+            <el-checkbox-group v-model="rpermisses" class="checkboxgroup">
+                <el-checkbox class="checkbox" v-for="permiss in Allpermisses" :label="permiss.permission_info" :key="permiss.perid">{{permiss.permission_info}}</el-checkbox>
+            </el-checkbox-group>
+            <div class="demo-drawer__footer">
+                <el-button @click="cancelForm">取 消</el-button>
+                <el-button type="primary" @click="$refs.drawer.closeDrawer()" :loading="loading">{{ loading ? '提交中 ...' : '确 定' }}</el-button>
+            </div>
+        </el-drawer>
     </el-container>
 </template>
 
@@ -98,6 +120,7 @@
         data() {
             return {
                 roleList: [],
+                editdrawer: false,
                 multipleSelection: [],
                 pageNum: 1,
                 pageSize: 5,
@@ -106,6 +129,9 @@
                 loading: false,
                 timer: null,
                 rid:0,
+                role_name:'',
+                role_info:'',
+                is_lock:false,
                 Allpermisses: [],
                 rpermisses: [],
             }
@@ -148,7 +174,6 @@
                     that.Allpermisses = res.data.list
                 }).catch(err=>{
                     console.log(err)
-                    this.error = true
                 });
             },
             handleSelectionChange(val) {
@@ -168,17 +193,51 @@
                 this.getplist()
             },
             newmodal(){
-
+                this.rid=0;
+                this.role_name='';
+                this.role_info='';
+                this.is_lock = true;
+                this.editdrawer = true;
             },
-            update(){
-
+            update(row){
+                this.rid=row.rid;
+                this.role_name=row.role_name;
+                this.role_info=row.role_info;
+                this.is_lock = row.is_lock==0?true:false
+                this.editdrawer = true;
             },
             deleteitem(){
-                console.log(this.multipleSelection)
+                if(this.multipleSelection.length!=0){
+                    let that = this;
+                    let rids = [];
+                    for(let i=0;i<this.multipleSelection.length;i++){
+                        rids.push(this.multipleSelection[i].rid)
+                    }
+                    this.$confirm('确认删除？')
+                        .then(() => {
+                            request4({
+                                method: 'delete',
+                                url: '/role',
+                                data: {"rids" : rids},
+                                headers: {"Authorization":this.token}
+                            }).then(res=>{
+                                if(res.data.result==200&&res.data.type=='delete'){
+                                    that.$message({message: '角色删除成功',type: 'success'});
+                                }
+                                that.getplist()
+                            }).catch(err=>{
+                                console.log(err)
+                                that.$message({  message: '操作失败', type: 'error' });
+                            })
+                            that.multipleSelection = []
+                        })
+                        .catch(() => {});
+                }
             },
             refresh(){
                 this.getplist()
                 this.getAllpermiss()
+                setTimeout(()=>{this.$message({ message: '刷新成功', type: 'success' })},1200)
             },
             getroleperes(rid){//获取当前选则角色的权限列表
                 this.rid = rid
@@ -241,10 +300,52 @@
                         }, 1000);
                     })
             },
+            edithandleClose(){
+                let that = this;
+                this.$confirm('确定要提交表单吗？')
+                        .then(() => {
+                            this.loading = true;
+                            this.timer = setTimeout(() => {
+                                request4({
+                                    method: 'post',
+                                    url: '/role',
+                                    data: {
+                                        rid:this.rid,
+                                        role_name:this.role_name,
+                                        role_info:this.role_info,
+                                        is_lock:this.is_lock==true?0:1,
+                                    },
+                                    headers: {"Authorization":this.token}
+                                }).then(res=>{
+                                    if(res.data.result==200&&res.data.type=='add'){
+                                        that.$message({message: '角色添加成功',type: 'success'});
+                                    }
+                                    else if(res.data.result==200&&res.data.type=='edit'){
+                                        that.$message({message: '角色信息修改成功',type: 'success'});
+                                    }
+                                    that.getplist()
+                                }).catch(err=>{
+                                    console.log(err)
+                                    that.$message({
+                                        message: '操作失败',
+                                        type: 'error'
+                                    });
+                                });
+                                this.editdrawer = false;
+                                // 动画关闭需要一定的时间
+                                setTimeout(() => {
+                                    this.loading = false;
+                                }, 400);
+                            }, 500);
+                        })
+            },
             cancelForm() {
                 this.loading = false;
                 this.drawer = false;
                 clearTimeout(this.timer);
+            },
+            canceleditForm(){
+                this.editdrawer = false;
             }
         },
         created() {
